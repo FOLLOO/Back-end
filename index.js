@@ -11,6 +11,7 @@ import UserModel from './models/user.js'
 
 import RoleRouter from './routes/role.js'
 import UserRouter from './routes/user.js'
+import PostRouter from './routes/posts.js'
 
 
 
@@ -33,6 +34,7 @@ app.get('/', (req, res) =>  {
 
 app.use('/role', RoleRouter);
 app.use('/api', UserRouter);
+app.use('/posts', PostRouter);
 
 
 app.listen(4000, (err) =>{
