@@ -1,4 +1,3 @@
-import {validationResult} from "express-validator";
 import bcrypt from "bcrypt";
 import UserModel from "../models/user.js";
 import jwt from "jsonwebtoken";
@@ -6,7 +5,6 @@ import jwt from "jsonwebtoken";
 
 import UserModule from "../models/user.js";
 import RoleModule from "../models/role.js";
-import Role from "../models/role.js";
 
 export const  getAll = async (req, res, next) =>  {
     try {
@@ -35,7 +33,7 @@ export const createUser = async (req, res, next) =>  {
         if (!foundRole) {
             res.status(404).json({message: "Роль не найдена"})
         }
-        const user = new UserModel({
+        const doc = new UserModel({
             email: req.body.email,
             passwordHash: passwordHash,
             nickname: req.body.nickname,
@@ -45,22 +43,29 @@ export const createUser = async (req, res, next) =>  {
             descriptions: req.body.cost,
         });
 
-
         // Сохраняем пользователя в базе данных
         try{
-            const userR = await user.save()
-            res.json({sucsess: true})
+            const userR = await doc.save()
+
+            const token = jwt.sign({
+                    _id: doc._id,
+                }, process.env.JWT_SECRET,
+                {
+                    expiresIn: '30d',
+                });
+
+            const {passwordHash, ...userData} = userR._doc;
+
+            res.json({
+                ...userData,
+                token: token,
+            })
+
         }catch(err){
             console.log(err);
             res.status(500).json({message: "Ошибка при сохранении"})
         }
 
-        const token = jwt.sign({
-                _id: user._id,
-            }, process.env.JWT_SECRET,
-            {
-                expiresIn: '30d',
-            });
     }
     catch(err){
         res.status(500).json({err, message: 'Не удалось зарегеститроваться'})
@@ -75,7 +80,19 @@ export const getOne = async (req,res,next) => {
         const user = await UserModule.findOne({
             _id: userID
         }).populate('role_id', 'title').exec()
-        res.json(user)
+
+
+        if (!user){
+            res.status(500).json({message: 'Fuck error user is not founded'})
+        }
+
+        const {passwordHash, ...userData} = user._doc;
+
+        res.json({
+            ...userData,
+            // token: token,
+        })
+
     }
     catch(err){
         console.log(err);
@@ -137,5 +154,40 @@ export const updateOne = async (req,res,next) => {
     }
 }
 
+
+export const login = async (req, res) =>  {
+    try{
+        const {email, password} = req.body;
+
+        const user = await UserModule.findOne({email: email});
+        if (!user) {
+            return res.status(500).json({message: 'Такого пользователя нет'})
+        }
+
+        const isValidPassword = await bcrypt.compare(password,  user._doc.passwordHash)
+        if(!isValidPassword){
+            res.status(400).json({message: 'НЕверный логин или пароль'})
+        }
+
+        const token = jwt.sign({
+                _id: user._id,
+            }, process.env.JWT_SECRET,
+            {
+                expiresIn: '30d',
+            });
+
+        const {passwordHash, ...userData} = user._doc;
+
+        res.json({
+            ...userData,
+            token: token
+        })
+
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).json('---Errrror lgon user')
+    }
+}
 
 
