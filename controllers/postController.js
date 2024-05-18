@@ -29,12 +29,23 @@
 // const postModule = require('../models/post.js');
 import postModule from '../models/post.js';
 import postContentModule from '../models/postContents.js';
-import Posts from "../routes/posts.js";
+import userBuyModule from '../models/userBuyContent.js';
+
+// import Posts from "../routes/posts.js";
 // const postContentModule = require('../models/postContents.js');
 
 export const createPost = async (req, res) => {
+
     try {
-        const { title, description, user_id, contents, banned } = req.body;
+        const { title, description, contents, banned } = req.body;
+        const user_id = req.userId.id;
+
+        const role = req.userId.role;
+
+        if (role !== 'автор' || 'админ'){
+            return res.status(401).json({success: false});
+        }
+
         const post = new postModule({ title, description, user_id, banned });
         const savedPost = await post.save();
 
@@ -59,17 +70,37 @@ export const createPost = async (req, res) => {
 };
 
 export const getOne = async (req, res) => {
+
+
     try {
         const postID = req.params.id;
-        // const { title, description, user_id, contents } = req.body;
-        const post = await postModule.findOne({ _id: postID });
-        // Создание связанного контента для поста
-        const postContents = await postContentModule.find( {post_id: postID});
-        res.status(201).json({ post: post, contents: postContents });
-    }
-    catch(err){
+
+        if(postID){
+            const post = await postModule.findOneAndUpdate(
+                { _id: postID },
+                {
+                    $inc: { views: 1 },
+                },
+                {
+                    returnDocument: 'after',
+                    // new: true, // Необходимо добавить опцию new: true для возврата обновленного документа
+                }
+            );
+
+            if (!post) {
+                return res.status(404).json({ message: 'Post not found 1' });
+            }
+
+            const postContents = await postContentModule.find({ post_id: postID });
+            res.status(200).json({ post, contents: postContents });
+        }
+        else{
+            res.status(404).json({ message: 'Post not found 3' });
+        }
+
+    } catch (err) {
         console.log(err);
-        res.status(500).send({message: "Ничего не вышло сорян братан, нету поста"});
+        res.status(500).json({ message: 'Error retrieving post' });
     }
 
 };
@@ -88,7 +119,26 @@ export const getAll = async (req, res) => {
             }
         ]);
 
-        res.status(201).json({ post: posts });
+        const updatedPosts = await Promise.all(posts.map(async p => {
+            const userBuyContent = await userBuyModule.findOne({ seller_id: req.userId.id});
+            return {
+                ...p,
+                subs: !!userBuyContent
+            };
+        }));
+
+        res.status(200).json(updatedPosts);
+
+        // res.status(200).json(updatedPosts);
+        // const post = await posts.map(p => {
+        //     const userBuyContent = userBuyModule.find({seller_id: req.userId.id});
+        //     return res.status(200).json({
+        //         ...post,
+        //         subs: !!userBuyContent
+        //     });
+        // });
+
+        // res.status(201).json({ post: posts });
     }
     catch(err){
         console.log(err);
@@ -98,6 +148,8 @@ export const getAll = async (req, res) => {
 };
 
 export const deleteOne = async (req, res) => {
+
+    const user_id = req.userId.id;
 
     try{
 
@@ -116,9 +168,12 @@ export const deleteOne = async (req, res) => {
 };
 
 export const updateOne = async (req, res) => {
+
+    const user_id = req.userId.id;
+
     try {
         const postID = req.params.id;
-        const { title, description, user_id, contents, banned } = req.body;
+        const { title, description, contents, banned } = req.body;
 
         // Обновление поста
         const updatedPost = await postModule.findByIdAndUpdate(

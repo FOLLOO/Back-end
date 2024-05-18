@@ -12,6 +12,10 @@ const PostSchema = new mongoose.Schema({
         banned: {
             type: Boolean,
         },
+        views: {
+          type: Number,
+            default: 0,
+        },
         user_id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

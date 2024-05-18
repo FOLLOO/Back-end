@@ -2,17 +2,26 @@ import UserBuyModule from "../models/userBuyContent.js";
 
 
 export const createUserBuy = async (req, res) => {
-    const {user_id, buy_period} = req.body;
-    const seller_id = req.params.id;
+    const {buy_period, seller_id} = req.body;
+    const userID = req.userId.id;
+    // const seller_id = req.params.id;
 
 
     try{
-        if(!user_id && !seller_id){
-            res.status(500).send({error: 'Please enter Users'});
+        if(!userID && !seller_id){
+           return  res.status(500).send({error: 'Please enter Users'});
         }
 
-        const buycontetn = await UserBuyModule.create({buyer_id:user_id,seller_id:seller_id, buy_period })
-        const dbSave = await buycontetn.save();
+        if(userID === seller_id){
+            return  res.status(500).send({error: 'Вы не можете подписаться на самого сбея'});
+        }
+
+        const buyContent = await UserBuyModule.create({buyer_id:userID, seller_id:seller_id, buy_period })
+        const dbSave = await buyContent.save();
+
+        if (dbSave){
+            return res.status(201).json({success: true});
+        }
 
     }
     catch(err){
@@ -20,14 +29,18 @@ export const createUserBuy = async (req, res) => {
     }
 }
 
-export const checkUserBuyers = async (req, res) => {
-    const {user_id} = req.body;
+export const getUserSubes = async (req, res) => {
 
+    const userID = req.userId.id;
+
+    if (!userID){
+        res.status(500).send({error: 'Please enter Users'});
+    }
     try{
 
-        const contents = await UserBuyModule.find({buyer_id: user_id})
-
+        const contents = await UserBuyModule.find({buyer_id: userID})
         res.json(contents);
+
     }
     catch(err){
         res.status(500).json('----Errorr cannot found allowed contents')

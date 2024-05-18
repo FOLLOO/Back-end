@@ -5,34 +5,35 @@ import {createComment, deleteComment, updateComment, getComments} from '../contr
 
 import { postsCreateValidation } from "../validations/posts.js";
 import validationErrors from "../utils/validationErrors.js";
+import checkAuth from "../utils/checkAuth.js";
 
 
 const router = express.Router();
 
 
-router.get("/", getAll);
-router.get("/:id", getOne);
+router.get("/",checkAuth, getAll);
+router.get("/:id",checkAuth, getOne);
 
 router.get('/:id/likes', getLikes);
 
-router.get('/:id/liked', getLike);
+router.get('/:id/liked',checkAuth, getLike);
 
 router.get('/:id/comments', getComments);
 
 
-router.delete("/:id", deleteOne);
-router.delete("/:id/comments", deleteComment);
+router.delete("/:id",checkAuth, deleteOne);
+router.delete("/:id/comments",checkAuth, deleteComment);
 
 
-router.post('/:id/like', createLike);
-router.post('/:id/comments', createComment);
+router.post('/:id/like',checkAuth, createLike);
+router.post('/:id/comments',checkAuth, createComment);
 
-router.post("/add",postsCreateValidation, validationErrors, createPost);
+router.post("/add",checkAuth, postsCreateValidation, validationErrors, createPost);
 
-router.patch("/:id",postsCreateValidation, validationErrors, updateOne);
+router.patch("/:id",checkAuth, postsCreateValidation, validationErrors, updateOne);
 
-router.patch('/:id/dislike', dislikeLike);
-router.patch("/:id/comments", updateComment);
+router.patch('/:id/dislike',checkAuth, dislikeLike);
+router.patch("/:id/comments",checkAuth, updateComment);
 
 
 

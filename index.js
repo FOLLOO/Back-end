@@ -1,7 +1,7 @@
 import express, {json} from 'express'
-import jwt from 'jsonwebtoken'
 import mongoose from 'mongoose'
-import bcrypt from 'bcrypt'
+import multer from 'multer'
+
 
 import { validationResult } from 'express-validator';
 
@@ -12,6 +12,7 @@ import UserModel from './models/user.js'
 import RoleRouter from './routes/role.js'
 import UserRouter from './routes/user.js'
 import PostRouter from './routes/posts.js'
+import UserBuyRouter from './routes/userBuy.js'
 
 
 
@@ -22,11 +23,25 @@ mongoose
 
 
 import {config} from "dotenv";
+import checkAuth from "./utils/checkAuth.js";
 
 config();
 const app = express();
 
+const storage = multer.diskStorage({
+    destination: (_, __, cb) => {
+        cb(null, './uploads');
+    },
+    filename: (_, file, cb) => {
+        cb(null, file.originalname);
+    }
+})
+
+const upload = multer({ storage });
+
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
+
 
 app.get('/', (req, res) =>  {
     res.send('Yeap it`s work!')
@@ -35,6 +50,14 @@ app.get('/', (req, res) =>  {
 app.use('/role', RoleRouter);
 app.use('/api', UserRouter);
 app.use('/posts', PostRouter);
+app.use('/buy', UserBuyRouter);
+
+app.post('/upload',checkAuth, upload.single('image'), (req, res) => {
+    res.json({
+        url: `/uploads/${req.file.originalname}`,
+    })
+})
+
 
 
 app.listen(4000, (err) =>{

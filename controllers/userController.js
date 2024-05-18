@@ -8,7 +8,7 @@ import RoleModule from "../models/role.js";
 
 export const  getAll = async (req, res, next) =>  {
     try {
-        const users = await UserModule.find({},).populate('role_id', 'title')
+        const users = await UserModule.find({}).populate('role_id', 'title')
             .exec();
 
         res.json(users);
@@ -20,7 +20,6 @@ export const  getAll = async (req, res, next) =>  {
         })
     }
 }
-
 
 // Оправить роль наименованием, чтобы сохранить
 export const createUser = async (req, res, next) =>  {
@@ -73,14 +72,15 @@ export const createUser = async (req, res, next) =>  {
     }
 }
 
-export const getOne = async (req,res,next) => {
+export const getOne = async (req,res) => {
     try{
-        const userID = req.params.id;
+
+        const userID = req.userId.id;
 
         const user = await UserModule.findOne({
             _id: userID
-        }).populate('role_id', 'title').exec()
-
+        }).populate('role_id', 'title')
+            .exec()
 
         if (!user){
             res.status(500).json({message: 'Fuck error user is not founded'})
@@ -92,6 +92,8 @@ export const getOne = async (req,res,next) => {
             ...userData,
             // token: token,
         })
+
+        // res.json(user);
 
     }
     catch(err){
@@ -159,18 +161,21 @@ export const login = async (req, res) =>  {
     try{
         const {email, password} = req.body;
 
-        const user = await UserModule.findOne({email: email});
+        const user = await UserModule.findOne({email: email})
+            .populate('role_id', 'title')
+            .exec();
         if (!user) {
             return res.status(500).json({message: 'Такого пользователя нет'})
         }
 
         const isValidPassword = await bcrypt.compare(password,  user._doc.passwordHash)
         if(!isValidPassword){
-            res.status(400).json({message: 'НЕверный логин или пароль'})
+            return res.status(400).json({message: 'НЕверный логин или пароль'})
         }
 
         const token = jwt.sign({
                 _id: user._id,
+                role: user.role_id.title,
             }, process.env.JWT_SECRET,
             {
                 expiresIn: '30d',
@@ -178,7 +183,7 @@ export const login = async (req, res) =>  {
 
         const {passwordHash, ...userData} = user._doc;
 
-        res.json({
+        return res.json({
             ...userData,
             token: token
         })
@@ -186,7 +191,7 @@ export const login = async (req, res) =>  {
     }
     catch(err){
         console.log(err);
-        res.status(500).json('---Errrror lgon user')
+        return  res.status(500).json('---Errrror lgon user')
     }
 }
 
