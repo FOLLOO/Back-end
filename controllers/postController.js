@@ -30,6 +30,7 @@
 import postModule from '../models/post.js';
 import postContentModule from '../models/postContents.js';
 import userBuyModule from '../models/userBuyContent.js';
+import userModule from '../models/user.js';
 
 // import Posts from "../routes/posts.js";
 // const postContentModule = require('../models/postContents.js');
@@ -121,8 +122,10 @@ export const getAll = async (req, res) => {
 
         const updatedPosts = await Promise.all(posts.map(async p => {
             const userBuyContent = await userBuyModule.findOne({ seller_id: req.userId.id});
+            const userCost = await userModule.findOne({ _id: p.user_id});
             return {
                 ...p,
+                cost: userCost.cost,
                 subs: !!userBuyContent
             };
         }));

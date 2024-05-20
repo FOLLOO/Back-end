@@ -124,9 +124,9 @@ export const dropOne = async (req,res,next) => {
 
 export const updateOne = async (req,res,next) => {
     try{
-        const userID = req.params.id;
+        const userID = req.userId.id;
 
-        const passwordHash = await bcrypt.hashSync(req.body.password, 10);
+        // const passwordHash = await bcrypt.hashSync(req.body.password, 10);
         const roleTitle = req.body.role.toLowerCase();
         const foundRole = await RoleModule.findOne({ title: roleTitle} );
 
@@ -134,15 +134,14 @@ export const updateOne = async (req,res,next) => {
             res.status(404).json({message: "Роль не найдена"})
         }
 
-
         const user = await UserModule.updateOne({_id: userID},{
-            email: req.body.email,
-            passwordHash: passwordHash,
-            nickname: req.body.nickname,
-            avatarURL: req.body.avatarURL,
+            // email: req.body.email,
+            // passwordHash: passwordHash,
+            // nickname: req.body.nickname,
+            // avatarURL: req.body.avatarURL,
             cost: req.body.cost,
             role_id: foundRole._id,
-            descriptions: req.body.cost,
+            descriptions: req.body.descriptions,
         })
         res.json({
             success: true
@@ -151,7 +150,7 @@ export const updateOne = async (req,res,next) => {
     catch(err){
         console.log(err);
         res.status(500).json({
-            message: "Не удалось добавить статус",
+            message: "Не удалось обновить",
         })
     }
 }
@@ -174,7 +173,7 @@ export const login = async (req, res) =>  {
         }
 
         const token = jwt.sign({
-                _id: user._id,
+                _id:  user._id,
                 role: user.role_id.title,
             }, process.env.JWT_SECRET,
             {
@@ -185,7 +184,8 @@ export const login = async (req, res) =>  {
 
         return res.json({
             ...userData,
-            token: token
+            token: token,
+            role: user.role_id.title,
         })
 
     }

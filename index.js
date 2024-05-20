@@ -1,7 +1,7 @@
 import express, {json} from 'express'
 import mongoose from 'mongoose'
 import multer from 'multer'
-
+import cors from 'cors'
 
 import { validationResult } from 'express-validator';
 
@@ -42,6 +42,9 @@ const upload = multer({ storage });
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
+app.use(cors({
+    origin: 'http://localhost:3000' // Разрешить запросы с этого источника
+}));
 
 app.get('/', (req, res) =>  {
     res.send('Yeap it`s work!')
