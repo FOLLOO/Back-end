@@ -1,7 +1,7 @@
 import express from "express";
-import {createPost, getOne, getAll, deleteOne, updateOne} from '../controllers/postController.js';
+import {createPost, getOne, getAll, deleteOne, updateOne, getUserPost} from '../controllers/postController.js';
 import {createLike, dislikeLike, getLikes, getLike} from '../controllers/likeController.js';
-import {createComment, deleteComment, updateComment, getComments} from '../controllers/commentController.js';
+import {createComment, deleteComment, updateComment, getComments, } from '../controllers/commentController.js';
 
 import { postsCreateValidation } from "../validations/posts.js";
 import validationErrors from "../utils/validationErrors.js";
@@ -12,6 +12,9 @@ const router = express.Router();
 
 
 router.get("/",checkAuth, getAll);
+
+router.get("/avtor/:id",checkAuth, getUserPost);
+
 router.get("/:id",checkAuth, getOne);
 
 router.get('/:id/likes', getLikes);

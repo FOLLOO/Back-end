@@ -29,7 +29,9 @@
 // const postModule = require('../models/post.js');
 import postModule from '../models/post.js';
 import postContentModule from '../models/postContents.js';
+
 import userBuyModule from '../models/userBuyContent.js';
+
 import userModule from '../models/user.js';
 
 // import Posts from "../routes/posts.js";
@@ -119,7 +121,6 @@ export const getAll = async (req, res) => {
                 }
             }
         ]);
-
         const updatedPosts = await Promise.all(posts.map(async p => {
             const userBuyContent = await userBuyModule.findOne({ seller_id: req.userId.id});
             const userCost = await userModule.findOne({ _id: p.user_id});
@@ -131,17 +132,51 @@ export const getAll = async (req, res) => {
         }));
 
         res.status(200).json(updatedPosts);
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).send({message: "Ничего не вышло сорян братан, нету постов"});
+    }
 
-        // res.status(200).json(updatedPosts);
-        // const post = await posts.map(p => {
-        //     const userBuyContent = userBuyModule.find({seller_id: req.userId.id});
-        //     return res.status(200).json({
-        //         ...post,
+};
+
+export const getUserPost = async (req, res) => {
+
+    const userID = req.userId.id;
+    const avotor = req.params.id;
+
+    if (!userID || !avotor ){
+        return res.status(400).json({message: 'NULL'})
+    }
+    // console.log(avotor);
+    // const checkSub = await userBuyModule.find({seller_id: avotor, user_id: })
+
+    try{
+        const posts =await postModule.find({user_id: avotor}).populate('user_id')
+        // const posts = await postModule.aggregate([
+        //     { $match: { user_id: "66362f026617594c6a1d0180" }},
+        //     {
+        //         $lookup: {
+        //             from: 'postcontents', // Название коллекции для связанного контента
+        //             localField: '_id', // Поле в коллекции постов, связанное с контентом
+        //             foreignField: 'post_id', // Поле в коллекции контента, связанное с постами
+        //             as: 'contents' // Название поля, в которое будут помещены связанные документы
+        //         }
+        //     }
+        // ], );
+        // console.log(avotor);
+        // console.log(posts);
+        // const updatedPosts = await Promise.all(posts.map(async p => {
+        //     const userBuyContent = await userBuyModule.findOne({ seller_id: req.userId.id});
+        //     const userCost = await userModule.findOne({ _id: p.user_id});
+        //     return {
+        //         ...p,
+        //         cost: userCost.cost,
         //         subs: !!userBuyContent
-        //     });
-        // });
-
-        // res.status(201).json({ post: posts });
+        //     };
+        // }));
+        res.json(posts)
+        // res.status(200).json(updatedPosts);
     }
     catch(err){
         console.log(err);
