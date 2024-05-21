@@ -90,7 +90,7 @@ export const getComments = async (req, res) => {
     }
 
     try{
-        const commetns = await CommentModule.find({ post_id : post_id });
+        const commetns = await CommentModule.find({ post_id : post_id }).populate('user_id', 'nickname');
 
         res.status(200)
             .json(commetns);

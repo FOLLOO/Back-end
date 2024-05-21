@@ -40,16 +40,16 @@ import userModule from '../models/user.js';
 export const createPost = async (req, res) => {
 
     try {
-        const { title, description, contents, banned } = req.body;
-        const user_id = req.userId.id;
+        const { title, description, contents } = req.body;
 
+        const user_id = req.userId.id;
         const role = req.userId.role;
 
-        if (role !== 'автор' || 'админ'){
-            return res.status(401).json({success: false});
-        }
+        // if (role !== 'автор' || 'админ'){
+        //     return res.status(401).json({success: false});
+        // }
 
-        const post = new postModule({ title, description, user_id, banned });
+        const post = new postModule({ title, description, user_id, banned: true });
         const savedPost = await post.save();
 
         // Создание связанного контента для поста
@@ -77,7 +77,6 @@ export const getOne = async (req, res) => {
 
     try {
         const postID = req.params.id;
-
         if(postID){
             const post = await postModule.findOneAndUpdate(
                 { _id: postID },
