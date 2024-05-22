@@ -1,7 +1,7 @@
 
 import express from "express";
 
-import {createUser, dropOne, getAll, getOne, updateOne, login} from "../controllers/userController.js";
+import {createUser, dropOne, getAll, getOne, updateOne, login, getOneAvtor} from "../controllers/userController.js";
 
 import { registerValidation, avtorValidation } from "../validations/auth.js";
 import validationErrors from "../utils/validationErrors.js";
@@ -13,6 +13,7 @@ const router = express.Router();
 
 router.get("/", getAll);
 router.get("/me", checkAuth, getOne);
+router.get("/avtor/:id", checkAuth, getOneAvtor);
 
 router.delete("/:id", dropOne);
 

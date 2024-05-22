@@ -28,20 +28,20 @@ export const createComment = async (req, res) => {
 export const deleteComment = async (req, res) => {
 
     // const {user_id} = req.body;
-    const user_id = req.userId.id;
-    const post_id = req.params.id;
-
-    if (!user_id || !post_id){
+    // const user_id = req.userId.id;
+    // const post_id = req.params.id;
+    const comment_id = req.params.id;
+    if (!comment_id){
         return res.status(404).json('User of Post not found');
     }
+    // if (!user_id || !post_id){
+    //     return res.status(404).json('User of Post not found');
+    // }
 
     try{
-        const comment = await CommentModule.deleteOne({
-            $and: [
-                { user_id },
-                { post_id }
-            ]
-        });
+        const comment = await CommentModule.deleteOne(
+                { _id: comment_id }
+        );
 
         res.status(200)
             .json({success: true});

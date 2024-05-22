@@ -72,9 +72,33 @@ export const createUser = async (req, res, next) =>  {
     }
 }
 
+export const getOneAvtor = async (req,res) => {
+
+    const userID = req.params.id;
+try{
+    const user = await UserModule.findOne({
+        _id: userID
+    })
+
+    if (!user){
+        res.status(500).json({message: 'Fuck error user is not founded'})
+    }
+    const {passwordHash, ...userData} = user._doc;
+    res.json({
+        ...userData,
+        // token: token,
+    })
+}
+catch(err){
+    console.log(err);
+    res.status(500).json({
+        message: "Не удалось найти пользоваетля",
+    })
+}
+}
+
 export const getOne = async (req,res) => {
     try{
-
         const userID = req.userId.id;
 
         const user = await UserModule.findOne({
@@ -92,9 +116,6 @@ export const getOne = async (req,res) => {
             ...userData,
             // token: token,
         })
-
-        // res.json(user);
-
     }
     catch(err){
         console.log(err);

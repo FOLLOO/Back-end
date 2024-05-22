@@ -33,6 +33,8 @@ import postContentModule from '../models/postContents.js';
 import userBuyModule from '../models/userBuyContent.js';
 
 import userModule from '../models/user.js';
+import mongoose from "mongoose";
+import Post from "../models/post.js";
 
 // import Posts from "../routes/posts.js";
 // const postContentModule = require('../models/postContents.js');
@@ -73,8 +75,6 @@ export const createPost = async (req, res) => {
 };
 
 export const getOne = async (req, res) => {
-
-
     try {
         const postID = req.params.id;
         if(postID){
@@ -139,43 +139,56 @@ export const getAll = async (req, res) => {
 
 };
 
+export const getAvtorPost = async (req, res) => {
+
+    const userID = req.params.id;
+
+    try{
+        // const posts = await postModule.find({user_id: avotor}).populate('user_id')
+
+        const posts = await Post.aggregate([
+            {
+                $match: { user_id: new mongoose.Types.ObjectId(userID) }
+            },
+            {
+                $lookup: {
+                    from: 'postcontents', // Название коллекции с контентом постов
+                    localField: '_id',
+                    foreignField: 'post_id',
+                    as: 'contents'
+                }
+            },
+        ]);
+        res.json(posts)
+    }
+    catch(err){
+        console.log(err);
+        res.status(500).send({message: "Ничего не вышло сорян братан, нету постов"});
+    }
+
+};
+
 export const getUserPost = async (req, res) => {
 
     const userID = req.userId.id;
-    const avotor = req.params.id;
-
-    if (!userID || !avotor ){
-        return res.status(400).json({message: 'NULL'})
-    }
-    // console.log(avotor);
-    // const checkSub = await userBuyModule.find({seller_id: avotor, user_id: })
 
     try{
-        const posts =await postModule.find({user_id: avotor}).populate('user_id')
-        // const posts = await postModule.aggregate([
-        //     { $match: { user_id: "66362f026617594c6a1d0180" }},
-        //     {
-        //         $lookup: {
-        //             from: 'postcontents', // Название коллекции для связанного контента
-        //             localField: '_id', // Поле в коллекции постов, связанное с контентом
-        //             foreignField: 'post_id', // Поле в коллекции контента, связанное с постами
-        //             as: 'contents' // Название поля, в которое будут помещены связанные документы
-        //         }
-        //     }
-        // ], );
-        // console.log(avotor);
-        // console.log(posts);
-        // const updatedPosts = await Promise.all(posts.map(async p => {
-        //     const userBuyContent = await userBuyModule.findOne({ seller_id: req.userId.id});
-        //     const userCost = await userModule.findOne({ _id: p.user_id});
-        //     return {
-        //         ...p,
-        //         cost: userCost.cost,
-        //         subs: !!userBuyContent
-        //     };
-        // }));
+        // const posts = await postModule.find({user_id: avotor}).populate('user_id')
+
+        const posts = await Post.aggregate([
+            {
+                $match: { user_id: new mongoose.Types.ObjectId(userID) }
+            },
+            {
+                $lookup: {
+                    from: 'postcontents', // Название коллекции с контентом постов
+                    localField: '_id',
+                    foreignField: 'post_id',
+                    as: 'contents'
+                }
+            },
+        ]);
         res.json(posts)
-        // res.status(200).json(updatedPosts);
     }
     catch(err){
         console.log(err);
