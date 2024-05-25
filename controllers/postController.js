@@ -158,6 +158,14 @@ export const getAvtorPost = async (req, res) => {
                     as: 'contents'
                 }
             },
+            {
+                $lookup: {
+                    from: 'users', // Название коллекции с контентом постов
+                    localField: 'user_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
         ]);
         res.json(posts)
     }
@@ -187,7 +195,18 @@ export const getUserPost = async (req, res) => {
                     as: 'contents'
                 }
             },
+            {
+                $lookup: {
+                    from: 'users', // Название коллекции с контентом постов
+                    localField: 'user_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
         ]);
+
+
+
         res.json(posts)
     }
     catch(err){

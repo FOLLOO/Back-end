@@ -105,7 +105,6 @@ export const getOne = async (req,res) => {
             _id: userID
         }).populate('role_id', 'title')
             .exec()
-
         if (!user){
             res.status(500).json({message: 'Fuck error user is not founded'})
         }
