@@ -6,7 +6,7 @@ import {
     deleteOne,
     updateOne,
     getUserPost,
-    getAvtorPost
+    getAvtorPost, searchPosts
 } from '../controllers/postController.js';
 import {createLike, dislikeLike, getLikes, getLike} from '../controllers/likeController.js';
 import {createComment, deleteComment, updateComment, getComments, } from '../controllers/commentController.js';
@@ -20,6 +20,7 @@ const router = express.Router();
 
 
 router.get("/",checkAuth, getAll);
+router.get('/search',checkAuth, searchPosts);
 
 router.get("/me",checkAuth, getUserPost);
 router.get("/avtor/:id",checkAuth, getAvtorPost);

@@ -87,14 +87,22 @@ export const getOne = async (req, res) => {
                     returnDocument: 'after',
                     // new: true, // Необходимо добавить опцию new: true для возврата обновленного документа
                 }
-            );
+            ).populate('user_id');
 
             if (!post) {
                 return res.status(404).json({ message: 'Post not found 1' });
             }
 
+            const userBuyContent = await userBuyModule.findOne({ buyer_id: req.userId.id, seller_id: post.user_id});
+            let subs = false;
+            if (userBuyContent){
+                subs = true;
+            }
+
             const postContents = await postContentModule.find({ post_id: postID });
-            res.status(200).json({ post, contents: postContents });
+            res.status(200).json({ post,
+                contents: postContents,
+                subs: subs});
         }
         else{
             res.status(404).json({ message: 'Post not found 3' });
@@ -121,12 +129,17 @@ export const getAll = async (req, res) => {
             }
         ]);
         const updatedPosts = await Promise.all(posts.map(async p => {
-            const userBuyContent = await userBuyModule.findOne({ seller_id: req.userId.id});
+            const userBuyContent = await userBuyModule.findOne({ buyer_id: req.userId.id, seller_id: p.user_id});
+            let subs = false;
+            if (userBuyContent){
+                subs = true;
+            }
+
             const userCost = await userModule.findOne({ _id: p.user_id});
             return {
                 ...p,
                 cost: userCost.cost,
-                subs: !!userBuyContent
+                subs: subs
             };
         }));
 
@@ -167,7 +180,22 @@ export const getAvtorPost = async (req, res) => {
                 }
             },
         ]);
-        res.json(posts)
+
+        const updatedPosts = await Promise.all(posts.map(async p => {
+            const userBuyContent = await userBuyModule.findOne({ buyer_id: req.userId.id, seller_id: p.user_id});
+            let subs = false;
+            if (userBuyContent){
+                subs = true;
+            }
+            return {
+                ...p,
+                subs: subs
+            };
+        }));
+
+        res.status(200).json(updatedPosts);
+
+        // res.json(posts)
     }
     catch(err){
         console.log(err);
@@ -247,7 +275,7 @@ export const updateOne = async (req, res) => {
         // Обновление поста
         const updatedPost = await postModule.findByIdAndUpdate(
             postID,
-            { title, description, user_id, banned },
+            { title, description,  banned },
             { new: true } // Возвращает обновленный документ
         );
 
@@ -273,5 +301,28 @@ export const updateOne = async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Ошибка при обновлении поста и контента' });
+    }
+};
+
+
+export const searchPosts = async (req, res) => {
+    const { query } = req.query; // Получаем параметр запроса "query"
+
+    if (!query) {
+        return res.status(400).send({ error: 'Query parameter is required' });
+    }
+
+    try {
+        const results = await Post.find({
+            $or: [
+                { title: { $regex: query, $options: 'i' } }, // Поиск по заголовку (регистронезависимый)
+                { description: { $regex: query, $options: 'i' } } // Поиск по описанию (регистронезависимый)
+            ]
+        });
+
+        return res.json(results);
+    } catch (err) {
+        console.error('Error performing search:', err);
+        return res.status(500).json({ error: 'Internal server error' });
     }
 };
