@@ -147,7 +147,7 @@ export const getAll = async (req, res) => {
     }
     catch(err){
         console.log(err);
-        res.status(500).send({message: "Ничего не вышло сорян братан, нету постов"});
+        res.status(500).send({message: "Ничего не вышло, нету постов"});
     }
 
 };

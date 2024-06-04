@@ -3,11 +3,11 @@ import mongoose from 'mongoose'
 import multer from 'multer'
 import cors from 'cors'
 
-import { validationResult } from 'express-validator';
+import {check, validationResult} from 'express-validator';
 
 import { registerValidation } from './validations/auth.js'
 
-import UserModel from './models/user.js'
+import LikeModule from './models/like.js'
 
 import RoleRouter from './routes/role.js'
 import UserRouter from './routes/user.js'
@@ -62,6 +62,28 @@ app.post('/upload',checkAuth, upload.single('image'), (req, res) => {
     })
 })
 
+
+app.get('/likes', checkAuth, async (req, res) => {
+
+    const userID = req.userId.id;
+    // console.log(userID)
+    if (!userID){
+        res.status(400).json({message: 'UserIsNOtFound'})
+    }
+
+    try{
+        const likes = await LikeModule.find({user_id: userID}).populate('post_id' )
+
+        if(likes){
+        res.status(200).json(likes)
+        }
+
+    }catch(err){
+        console.log(err);
+        res.status(500).json({message: 'Something is wrong'})
+    }
+
+})
 
 
 app.listen(4000, (err) =>{
